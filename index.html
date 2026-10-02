@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch to cURL - Estilo Duolingo</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Nunito & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@500;700;800;900;1000&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          },
+          colors: {
+            duo: {
+              green: '#58cc02',
+              greenDark: '#46a302',
+              greenLight: '#78c800',
+              blue: '#1cb0f6',
+              blueDark: '#1899d6',
+              yellow: '#ffc800',
+              yellowDark: '#e5b200',
+              orange: '#ff9600',
+              orangeDark: '#e58600',
+              red: '#ff4b4b',
+              redDark: '#ea2b2b',
+              purple: '#ce82ff',
+              purpleDark: '#a559d6',
+              grayBg: '#f7f7f7',
+              grayCard: '#ffffff',
+              grayBorder: '#e5e5e5',
+              grayText: '#4b4b4b',
+              grayMuted: '#afafaf',
+              darkTerminal: '#111827',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Duolingo 3D Button Styles */
+    .btn-3d {
+      transition: all 0.1s ease;
+      position: relative;
+    }
+    .btn-3d:active {
+      transform: translateY(4px);
+      box-shadow: none !important;
+    }
+    .btn-green {
+      background-color: #58cc02;
+      border-bottom: 5px solid #46a302;
+      color: #ffffff;
+    }
+    .btn-green:hover {
+      background-color: #61df02;
+    }
+    .btn-blue {
+      background-color: #1cb0f6;
+      border-bottom: 5px solid #1899d6;
+      color: #ffffff;
+    }
+    .btn-blue:hover {
+      background-color: #24bbfd;
+    }
+    .btn-gray {
+      background-color: #ffffff;
+      border: 2px solid #e5e5e5;
+      border-bottom: 5px solid #e5e5e5;
+      color: #4b4b4b;
+    }
+    .btn-gray:hover {
+      background-color: #f7f7f7;
+    }
+    .btn-orange {
+      background-color: #ff9600;
+      border-bottom: 5px solid #e58600;
+      color: #ffffff;
+    }
+    .btn-orange:hover {
+      background-color: #ffa115;
+    }
+
+    /* Duo Card Styling */
+    .duo-card {
+      background-color: #ffffff;
+      border: 2px solid #e5e5e5;
+      border-bottom-width: 5px;
+      border-radius: 1.5rem;
+    }
+
+    /* Floating XP animation */
+    @keyframes xpFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      50% { opacity: 1; transform: translateY(-25px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-50px) scale(1); }
+    }
+    .xp-popup {
+      position: absolute;
+      animation: xpFloat 1.2s ease-out forwards;
+      pointer-events: none;
+      font-weight: 900;
+      color: #ffc800;
+      text-shadow: 0 2px 0 #e5b200, 0 0 10px rgba(255, 200, 0, 0.5);
+    }
+
+    /* Speech Bubble Triangle */
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 24px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 12px solid #e5e5e5;
+    }
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      left: -9px;
+      top: 25px;
+      width: 0;
+      height: 0;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      border-right: 11px solid #ffffff;
+    }
+
+    /* Custom Scrollbar for Code Editor */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+  </style>
+</head>
+
+<body class="bg-duo-grayBg text-duo-grayText font-sans min-h-screen flex flex-col selection:bg-duo-green selection:text-white pb-12">
+
+  <!-- HEADER / NAVBAR -->
+  <header class="bg-white border-b-2 border-duo-grayBorder sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      
+      <!-- Logo -->
+      <div class="flex items-center gap-3 cursor-pointer select-none" onclick="playChime()">
+        <div class="w-10 h-10 bg-duo-green rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md border-b-4 border-duo-greenDark">
+          <i class="fa-solid fa-code"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-black tracking-wider text-duo-green leading-none">FETCH<span class="text-duo-blue">2CURL</span></h1>
+          <p class="text-xs font-extrabold text-duo-grayMuted tracking-widest uppercase">Conversor Duolingo</p>
+        </div>
+      </div>
+
+      <!-- Gamification Badges -->
+      <div class="flex items-center gap-3 sm:gap-6 font-extrabold text-sm sm:text-base">
+        <!-- Streak -->
+        <div class="flex items-center gap-2 text-duo-orange bg-orange-50 px-3 py-1.5 rounded-2xl border-2 border-orange-200">
+          <i class="fa-solid fa-fire text-lg animate-bounce"></i>
+          <span id="streakCount">14</span>
+        </div>
+
+        <!-- XP Badge -->
+        <div class="flex items-center gap-2 text-duo-yellow bg-yellow-50 px-3 py-1.5 rounded-2xl border-2 border-yellow-200 relative">
+          <i class="fa-solid fa-bolt text-lg"></i>
+          <span id="xpCount">1,250</span> XP
+          <div id="xpContainer"></div>
+        </div>
+
+        <!-- Sound Toggle -->
+        <button id="soundBtn" onclick="toggleSound()" class="w-10 h-10 rounded-2xl border-2 border-duo-grayBorder flex items-center justify-center text-duo-grayMuted hover:text-duo-grayText hover:bg-gray-100 transition">
+          <i class="fa-solid fa-volume-high text-lg" id="soundIcon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 mt-6 flex-1 w-full flex flex-col gap-6">
+
+    <!-- MASCOT SPEECH BANNER -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-4 rounded-3xl border-2 border-duo-grayBorder border-b-4">
+      
+      <!-- Animated SVG Duo Owl Avatar -->
+      <div class="relative w-20 h-20 shrink-0 self-center sm:self-auto">
+        <svg id="duoMascot" class="w-full h-full drop-shadow-md transition-transform duration-300 hover:scale-110" viewBox="0 0 100 100">
+          <!-- Body -->
+          <ellipse cx="50" cy="55" rx="38" ry="36" fill="#58cc02" />
+          <ellipse cx="50" cy="58" rx="28" ry="26" fill="#78c800" />
+          
+          <!-- Feet -->
+          <ellipse cx="36" cy="90" rx="10" ry="4" fill="#ff9600" />
+          <ellipse cx="64" cy="90" rx="10" ry="4" fill="#ff9600" />
+          
+          <!-- Eyes Outer -->
+          <circle cx="36" cy="45" r="16" fill="#ffffff" />
+          <circle cx="64" cy="45" r="16" fill="#ffffff" />
+          
+          <!-- Eyes Inner -->
+          <circle id="eyeLeft" cx="38" cy="45" r="8" fill="#4b4b4b" />
+          <circle id="eyeRight" cx="62" cy="45" r="8" fill="#4b4b4b" />
+          <circle cx="40" cy="42" r="3" fill="#ffffff" />
+          <circle cx="64" cy="42" r="3" fill="#ffffff" />
+          
+          <!-- Beak -->
+          <polygon points="50,48 43,58 57,58" fill="#ff9600" />
+          
+          <!-- Wings -->
+          <path d="M 12 50 Q 5 65 20 70 Z" fill="#46a302" />
+          <path d="M 88 50 Q 95 65 80 70 Z" fill="#46a302" />
+
+          <!-- Cheeks -->
+          <ellipse cx="24" cy="54" rx="5" ry="3" fill="#ff4b4b" opacity="0.4" />
+          <ellipse cx="76" cy="54" rx="5" ry="3" fill="#ff4b4b" opacity="0.4" />
+        </svg>
+      </div>
+
+      <!-- Speech Bubble -->
+      <div class="relative speech-bubble bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex-1 w-full">
+        <div id="mascotMessage" class="text-base font-extrabold text-duo-grayText">
+          Cole a sua requisição <code class="bg-gray-100 text-duo-blue px-2 py-0.5 rounded-md font-mono text-sm">fetch()</code> no campo abaixo e eu transformo em um comando <code class="bg-gray-100 text-duo-green px-2 py-0.5 rounded-md font-mono text-sm">cURL</code> super rápido! 🦉✨
+        </div>
+      </div>
+    </div>
+
+    <!-- CONVERSION WORKSPACE GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+      
+      <!-- LEFT PANEL: FETCH INPUT -->
+      <div class="duo-card p-5 flex flex-col justify-between gap-4">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="bg-blue-100 text-duo-blue px-3 py-1 rounded-xl font-black text-xs tracking-wider uppercase flex items-center gap-2">
+              <i class="fa-brands fa-js"></i> JS Fetch Input
+            </span>
+            <button onclick="loadSample()" class="btn-3d btn-gray text-xs font-extrabold px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-duo-blue hover:text-duo-blueDark">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Carregar Exemplo
+            </button>
+          </div>
+
+          <!-- Textarea Input -->
+          <div class="relative">
+            <textarea id="fetchInput" rows="14" placeholder="Cole seu código await fetch(...) aqui..."
+              class="w-full font-mono text-xs sm:text-sm bg-gray-50 border-2 border-duo-grayBorder focus:border-duo-blue focus:bg-white rounded-2xl p-4 text-slate-800 outline-none transition resize-none leading-relaxed"
+              spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <!-- Input Actions -->
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+          <button onclick="clearInput()" class="text-xs font-extrabold text-duo-grayMuted hover:text-duo-red transition flex items-center gap-1.5 px-2 py-1">
+            <i class="fa-solid fa-trash"></i> Limpar entrada
+          </button>
+          <span class="text-xs font-bold text-duo-grayMuted" id="inputCharCount">0 caracteres</span>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: CURL OUTPUT -->
+      <div class="duo-card p-5 flex flex-col justify-between gap-4 bg-white">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="bg-green-100 text-duo-green px-3 py-1 rounded-xl font-black text-xs tracking-wider uppercase flex items-center gap-2">
+              <i class="fa-solid fa-terminal"></i> Terminal cURL Output
+            </span>
+            <div class="flex items-center gap-2">
+              <span id="statusBadge" class="hidden text-xs font-extrabold text-duo-green bg-green-50 px-2.5 py-1 rounded-lg border border-green-200">
+                <i class="fa-solid fa-check"></i> Válido
+              </span>
+            </div>
+          </div>
+
+          <!-- Code Display Container -->
+          <div class="relative group">
+            <pre id="curlOutput" class="w-full h-[336px] font-mono text-xs sm:text-sm bg-duo-darkTerminal text-emerald-400 rounded-2xl p-4 overflow-auto leading-relaxed border-2 border-gray-800 select-all whitespace-pre">curl '...'</pre>
+            
+            <!-- Quick Copy Float Overlay Button -->
+            <button onclick="copyCurl()" class="absolute top-3 right-3 btn-3d btn-blue text-xs font-black px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-lg opacity-90 hover:opacity-100">
+              <i class="fa-solid fa-copy"></i> Copiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+          <button onclick="copyCurl()" id="copyMainBtn" class="btn-3d btn-blue text-sm font-black px-5 py-2.5 rounded-2xl flex items-center gap-2">
+            <i class="fa-solid fa-copy text-base"></i> Copiar cURL
+          </button>
+          
+          <button onclick="downloadCurl()" class="btn-3d btn-gray text-xs font-black px-4 py-2.5 rounded-2xl flex items-center gap-1.5 text-duo-grayText">
+            <i class="fa-solid fa-download"></i> Baixar .sh
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CONVERT ACTION BUTTON & SETTINGS TOOLBAR -->
+    <div class="duo-card p-5 flex flex-col md:flex-row items-center justify-between gap-4 bg-white">
+      
+      <!-- Settings Controls -->
+      <div class="flex flex-wrap items-center gap-4 text-xs font-extrabold text-duo-grayText w-full md:w-auto">
+        <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-duo-grayBorder hover:bg-gray-100">
+          <input type="checkbox" id="optPrettify" checked onchange="convertFetch()" class="w-4 h-4 accent-duo-green rounded">
+          <span>Formatar JSON do Body</span>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-duo-grayBorder hover:bg-gray-100">
+          <input type="checkbox" id="optCleanHeaders" onchange="convertFetch()" class="w-4 h-4 accent-duo-green rounded">
+          <span>Omitir Sec-Fetch-* / Priority</span>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-duo-grayBorder hover:bg-gray-100">
+          <input type="checkbox" id="optMultiline" checked onchange="convertFetch()" class="w-4 h-4 accent-duo-green rounded">
+          <span>Multi-linha (\)</span>
+        </label>
+      </div>
+
+      <!-- Primary Big Convert Button -->
+      <button onclick="convertFetch(true)" class="btn-3d btn-green w-full md:w-auto text-base sm:text-lg font-black px-10 py-3.5 rounded-2xl flex items-center justify-center gap-3 tracking-wide uppercase shadow-lg">
+        <i class="fa-solid fa-bolt text-yellow-300 text-xl"></i> Converter para cURL
+      </button>
+
+    </div>
+
+    <!-- EXPLANATION / HOW IT WORKS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-2">
+      <div class="bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex items-center gap-3 text-left">
+        <div class="w-12 h-12 bg-green-100 text-duo-green rounded-xl flex items-center justify-center text-xl font-extrabold shrink-0">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h4 class="font-extrabold text-sm text-duo-grayText">100% Seguro & Local</h4>
+          <p class="text-xs font-bold text-duo-grayMuted">Tudo é processado diretamente no seu navegador. Nenhum dado é enviado para servidores.</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex items-center gap-3 text-left">
+        <div class="w-12 h-12 bg-blue-100 text-duo-blue rounded-xl flex items-center justify-center text-xl font-extrabold shrink-0">
+          <i class="fa-solid fa-code-merge"></i>
+        </div>
+        <div>
+          <h4 class="font-extrabold text-sm text-duo-grayText">DevTools Compatible</h4>
+          <p class="text-xs font-bold text-duo-grayMuted">Copie o "Copy as fetch" da aba Network do Firefox ou Chrome e cole diretamente.</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex items-center gap-3 text-left">
+        <div class="w-12 h-12 bg-purple-100 text-duo-purple rounded-xl flex items-center justify-center text-xl font-extrabold shrink-0">
+          <i class="fa-solid fa-brackets-curly"></i>
+        </div>
+        <div>
+          <h4 class="font-extrabold text-sm text-duo-grayText">JSON Auto-Prettify</h4>
+          <p class="text-xs font-bold text-duo-grayMuted">Identifica e formata automaticamente bodies JSON minificados ou escapados.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="max-w-6xl mx-auto px-4 mt-8 text-center text-xs font-bold text-duo-grayMuted">
+    Feito com estilo e energia do <span class="text-duo-green font-extrabold">Duolingo</span> 🦉 • Suporta Fetch API nativa
+  </footer>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-duo-darkTerminal text-white px-5 py-3.5 rounded-2xl border-2 border-gray-700 shadow-2xl flex items-center gap-3 font-extrabold text-sm pointer-events-none">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-duo-green text-lg"></i>
+    <span id="toastText">Mensagem do Toast</span>
+  </div>
+
+  <script>
+    // --- STATE MANAGEMENT ---
+    let soundEnabled = true;
+    let userXp = 1250;
+    let userStreak = 14;
+
+    // --- AUDIO SYNTHESIZER (Web Audio API - No External Files) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function playTone(freq, type, duration, delay = 0) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        setTimeout(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        }, delay);
+      } catch (e) {
+        console.warn("Audio Context error:", e);
+      }
+    }
+
+    function playChime() {
+      // Duolingo style level up chime (C5, E5, G5, C6)
+      playTone(523.25, 'sine', 0.15, 0);   // C5
+      playTone(659.25, 'sine', 0.15, 80);  // E5
+      playTone(783.99, 'sine', 0.15, 160); // G5
+      playTone(1046.50, 'sine', 0.3, 240); // C6
+    }
+
+    function playPop() {
+      playTone(400, 'triangle', 0.08, 0);
+      playTone(800, 'sine', 0.1, 40);
+    }
+
+    function playErrorSound() {
+      playTone(220, 'sawtooth', 0.2, 0);
+      playTone(180, 'sawtooth', 0.3, 150);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('soundIcon');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-lg';
+        showToast('Som ativado! 🔊', 'fa-volume-high');
+        playPop();
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-lg';
+        showToast('Som desativado! 🔇', 'fa-volume-xmark');
+      }
+    }
+
+    // --- UI ANIMATIONS & MASCOT EXPRESSIONS ---
+    function setMascotMood(mood, text) {
+      const msg = document.getElementById('mascotMessage');
+      const eyeL = document.getElementById('eyeLeft');
+      const eyeR = document.getElementById('eyeRight');
+      const mascot = document.getElementById('duoMascot');
+
+      msg.innerHTML = text;
+
+      if (mood === 'happy') {
+        mascot.style.transform = 'scale(1.15) rotate(-5deg)';
+        eyeL.setAttribute('cy', '42');
+        eyeR.setAttribute('cy', '42');
+        setTimeout(() => mascot.style.transform = 'scale(1) rotate(0deg)', 400);
+      } else if (mood === 'error') {
+        mascot.style.transform = 'shake 0.3s';
+        eyeL.setAttribute('cy', '48');
+        eyeR.setAttribute('cy', '48');
+        setTimeout(() => mascot.style.transform = 'scale(1)', 400);
+      } else {
+        eyeL.setAttribute('cy', '45');
+        eyeR.setAttribute('cy', '45');
+        mascot.style.transform = 'scale(1)';
+      }
+    }
+
+    function triggerXpGain(amount = 10) {
+      userXp += amount;
+      document.getElementById('xpCount').innerText = userXp.toLocaleString();
+
+      const container = document.getElementById('xpContainer');
+      const popup = document.createElement('div');
+      popup.className = 'xp-popup text-base';
+      popup.innerText = `+${amount} XP`;
+      popup.style.left = '20px';
+      popup.style.top = '-10px';
+      container.appendChild(popup);
+
+      setTimeout(() => popup.remove(), 1200);
+    }
+
+    function showToast(message, iconClass = 'fa-circle-check') {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastText.innerText = message;
+      toastIcon.className = `fa-solid ${iconClass} text-duo-green text-lg`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // --- PARSER ENGINE: FETCH TO CURL ---
+    function parseFetchToCurl(input) {
+      if (!input || !input.trim()) {
+        return { error: "Cole um código de fetch para converter." };
+      }
+
+      const cleaned = input.trim();
+
+      // Extract URL using Regex
+      // Matches fetch("URL", ...) or fetch('URL', ...) or fetch(`URL`, ...)
+      let url = "";
+      const urlMatch = cleaned.match(/fetch\s*\(\s*(["'`])((?:\\\1|(?!\1).)*)\1/);
+      
+      if (urlMatch && urlMatch[2]) {
+        url = urlMatch[2];
+      } else {
+        // Fallback: look for http:// or https:// inside quotes
+        const fallbackMatch = cleaned.match(/(["'`])(https?:\/\/[^"'`]+)\1/);
+        if (fallbackMatch && fallbackMatch[2]) {
+          url = fallbackMatch[2];
+        }
+      }
+
+      if (!url) {
+        return { error: "Não foi possível encontrar a URL no trecho de fetch fornecido." };
+      }
+
+      // Extract Options Object
+      let optionsObj = {};
+      const firstCommaPos = cleaned.indexOf(',');
+      
+      if (firstCommaPos !== -1) {
+        const openBrace = cleaned.indexOf('{', firstCommaPos);
+        const lastCloseBrace = cleaned.lastIndexOf('}');
+        
+        if (openBrace !== -1 && lastCloseBrace > openBrace) {
+          const optionsStr = cleaned.slice(openBrace, lastCloseBrace + 1);
+          try {
+            // Evaluates JS Object safely in local context
+            optionsObj = new Function(`return (${optionsStr});`)();
+          } catch (e) {
+            console.warn("Direct JS evaluation failed. Attempting sanitized parse.", e);
+            try {
+              // Alternative backup extraction
+              optionsObj = eval(`(${optionsStr})`);
+            } catch (err) {
+              return { error: "Erro ao interpretar o objeto de opções (headers/body) do fetch." };
+            }
+          }
+        }
+      }
+
+      // Extraction of Properties
+      const method = (optionsObj.method || 'GET').toUpperCase();
+      const headers = optionsObj.headers || {};
+      const referrer = optionsObj.referrer || optionsObj.referer;
+      const body = optionsObj.body;
+
+      // Config Options
+      const prettify = document.getElementById('optPrettify').checked;
+      const cleanHeaders = document.getElementById('optCleanHeaders').checked;
+      const multiline = document.getElementById('optMultiline').checked;
+
+      const curlParts = [];
+      const q = "'"; // quote type
+
+      // Command Base
+      curlParts.push(`curl ${q}${url}${q}`);
+
+      // HTTP Method
+      if (method !== 'GET') {
+        curlParts.push(`-X ${method}`);
+      }
+
+      // Headers processing
+      for (const [key, val] of Object.entries(headers)) {
+        if (cleanHeaders) {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey.startsWith('sec-fetch-') || lowerKey === 'priority') {
+            continue; // Skip noise headers if clean option enabled
+          }
+        }
+        curlParts.push(`-H ${q}${key}: ${val}${q}`);
+      }
+
+      // Referrer processing
+      if (referrer && !Object.keys(headers).some(k => k.toLowerCase() === 'referer')) {
+        curlParts.push(`-H ${q}Referer: ${referrer}${q}`);
+      }
+
+      // Body processing
+      if (body !== undefined && body !== null) {
+        let formattedBody = body;
+
+        if (typeof body === 'string') {
+          try {
+            const parsed = JSON.parse(body);
+            formattedBody = prettify ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed);
+          } catch (e) {
+            // Not JSON string, keep raw string
+          }
+        } else if (typeof body === 'object') {
+          formattedBody = prettify ? JSON.stringify(body, null, 2) : JSON.stringify(body);
+        }
+
+        // Format raw data parameter
+        curlParts.push(`--data-raw ${q}${formattedBody}${q}`);
+      }
+
+      // Join multi-line vs single line
+      if (multiline) {
+        return { result: curlParts.join(' \\\n  ') };
+      } else {
+        return { result: curlParts.join(' ') };
+      }
+    }
+
+    // --- ACTION HANDLERS ---
+    function convertFetch(isManualClick = false) {
+      const input = document.getElementById('fetchInput').value;
+      const output = document.getElementById('curlOutput');
+      const statusBadge = document.getElementById('statusBadge');
+
+      document.getElementById('inputCharCount').innerText = `${input.length} caracteres`;
+
+      if (!input.trim()) {
+        output.innerText = "curl '...'";
+        statusBadge.classList.add('hidden');
+        if (isManualClick) {
+          playErrorSound();
+          setMascotMood('error', 'Por favor, cole um código <code class="bg-gray-100 text-duo-blue px-2 py-0.5 rounded-md font-mono text-sm">fetch()</code> antes de converter! 🦉');
+        }
+        return;
+      }
+
+      const parsed = parseFetchToCurl(input);
+
+      if (parsed.error) {
+        output.innerText = `# Erro: ${parsed.error}`;
+        statusBadge.className = 'text-xs font-extrabold text-duo-red bg-red-50 px-2.5 py-1 rounded-lg border border-red-200';
+        statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Inválido';
+        statusBadge.classList.remove('hidden');
+
+        if (isManualClick) {
+          playErrorSound();
+          setMascotMood('error', `Ops! ${parsed.error} 🧐`);
+        }
+      } else {
+        output.innerText = parsed.result;
+        statusBadge.className = 'text-xs font-extrabold text-duo-green bg-green-50 px-2.5 py-1 rounded-lg border border-green-200';
+        statusBadge.innerHTML = '<i class="fa-solid fa-check"></i> cURL Válido';
+        statusBadge.classList.remove('hidden');
+
+        if (isManualClick) {
+          playChime();
+          triggerXpGain(10);
+          setMascotMood('happy', 'Incrível! Requisição convertida com sucesso para cURL! **+10 XP** 🎉');
+          showToast('Convertido para cURL com sucesso!', 'fa-bolt');
+        }
+      }
+    }
+
+    function loadSample() {
+      // User provided sample preloaded
+      const sample = `await fetch("http://localhost:4200/corporate/gateway/arms-corporate-api/people?sessionEntityId=89&cultureCode=pt-BR", {
+    "credentials": "include",
+    "headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Authorization": "Bearer 123",
+        "Culture": "pt-BR",
+        "Content-Type": "application/json",
+        "X-KL-kes-Ajax-Request": "Ajax_Request",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "Priority": "u=0",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache"
+    },
+    "referrer": "http://localhost:4200/corporate/person/new",
+    "body": "{\\"parent\\":null,\\"name\\":\\"Sérgio Monteiro\\",\\"primaryDocument\\":\\"098.897.049-00\\",\\"email\\":\\"ma@mail.com\\",\\"address\\":\\"Rua Maceió\\",\\"zone\\":\\"Vila Pioneiro\\",\\"zipCode\\":\\"85909-530\\",\\"country\\":{\\"id\\":1,\\"name\\":\\"Brasil\\",\\"nameTranslated\\":\\"Brasil\\",\\"iconCls\\":\\"BR\\",\\"currencyCode\\":\\"BRL\\",\\"language\\":{\\"id\\":1,\\"code\\":\\"pt-BR\\",\\"description\\":\\"Português\\",\\"descriptionEnum\\":\\"PORTUGUESE\\"},\\"rate\\":1,\\"isActive\\":true},\\"locality\\":{\\"id\\":2928,\\"countryId\\":1,\\"state\\":\\"Paraná\\",\\"city\\":\\"Toledo\\",\\"localityName\\":\\"Toledo - Paraná (Brasil)\\",\\"StateAcronym\\":\\"PR\\"},\\"recordStatus\\":{\\"id\\":0,\\"description\\":\\"\\"},\\"legalEntity\\":{\\"id\\":89,\\"name\\":\\"Associação Oeste Paranaense da IASD\\",\\"countryId\\":1},\\"countryBirth\\":{\\"id\\":1,\\"language\\":{}},\\"birthDate\\":\\"1997-07-12\\",\\"typeNaturalPerson\\":{\\"id\\":2,\\"icon\\":\\"fas fa-male\\",\\"description\\":\\"Funcionário\\",\\"defaultDescriptionLang\\":\\"Funcionário\\",\\"observation\\":\\"Funcionários que trabalham diretamente para obra e que ainda não possuem credencial de obreiro.\\",\\"observation_defaultLang\\":\\"Funcionários que trabalham diretamente para obra e que ainda não possuem credencial de obreiro.\\",\\"isMain\\":true},\\"maritalStatusEnum\\":\\"2\\",\\"genderEnum\\":1,\\"jobTitle\\":null,\\"ratingFactor\\":1,\\"isDisabled\\":false,\\"firstContractDate\\":\\"\\",\\"validationType\\":0,\\"usePrimaryDocument\\":true,\\"countryPersonCustomName\\":{\\"id\\":0,\\"personId\\":0,\\"countryEnum\\":1,\\"jsonNameObject\\":{}},\\"regionCodeIneiPerus\\":[],\\"typePrimaryDocument\\":{},\\"jobArgentina\\":{},\\"savedDependentCountryBirth\\":\\"\\"}",
+    "method": "POST",
+    "mode": "cors"
+});`;
+
+      document.getElementById('fetchInput').value = sample;
+      playPop();
+      convertFetch(true);
+      setMascotMood('happy', 'Exemplo de requisição carregado! Veja o cURL gerado ao lado. 🚀');
+    }
+
+    function clearInput() {
+      document.getElementById('fetchInput').value = '';
+      document.getElementById('curlOutput').innerText = "curl '...'";
+      document.getElementById('statusBadge').classList.add('hidden');
+      document.getElementById('inputCharCount').innerText = "0 caracteres";
+      playPop();
+      setMascotMood('normal', 'Campos limpos. Cole uma nova requisição quando quiser!');
+    }
+
+    function copyCurl() {
+      const curlText = document.getElementById('curlOutput').innerText;
+
+      if (!curlText || curlText.startsWith("curl '...'") || curlText.startsWith("# Erro")) {
+        playErrorSound();
+        showToast('Nada de válido para copiar!', 'fa-circle-xmark');
+        return;
+      }
+
+      // Safe Clipboard Copying
+      const textarea = document.createElement('textarea');
+      textarea.value = curlText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        playPop();
+        triggerXpGain(5);
+        showToast('cURL copiado para a área de transferência! 📋', 'fa-circle-check');
+        setMascotMood('happy', 'Comando cURL copiado! Prontinho para colar no seu Terminal ou Postman. 📋✨');
+      } catch (err) {
+        showToast('Erro ao copiar', 'fa-triangle-exclamation');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    function downloadCurl() {
+      const curlText = document.getElementById('curlOutput').innerText;
+      if (!curlText || curlText.startsWith("curl '...'") || curlText.startsWith("# Erro")) {
+        playErrorSound();
+        showToast('Nada para baixar!', 'fa-circle-xmark');
+        return;
+      }
+
+      const blob = new Blob([`#!/usr/bin/env bash\n\n${curlText}\n`], { type: 'text/x-sh' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'request.sh';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      playPop();
+      showToast('Arquivo request.sh baixado! 💾');
+    }
+
+    // Real-time Conversion Listener
+    document.getElementById('fetchInput').addEventListener('input', () => {
+      convertFetch(false);
+    });
+
+    // Auto-load sample on startup
+    window.onload = () => {
+      loadSample();
+    };
+  </script>
+</body>
+</html>
