@@ -87,14 +87,6 @@
     .btn-gray:hover {
       background-color: #f7f7f7;
     }
-    .btn-orange {
-      background-color: #ff9600;
-      border-bottom: 5px solid #e58600;
-      color: #ffffff;
-    }
-    .btn-orange:hover {
-      background-color: #ffa115;
-    }
 
     /* Duo Card Styling */
     .duo-card {
@@ -143,7 +135,7 @@
       border-right: 11px solid #ffffff;
     }
 
-    /* Custom Scrollbar for Code Editor */
+    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -202,41 +194,27 @@
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
   <main class="max-w-6xl mx-auto px-4 mt-6 flex-1 w-full flex flex-col gap-6">
 
     <!-- MASCOT SPEECH BANNER -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-4 rounded-3xl border-2 border-duo-grayBorder border-b-4">
       
-      <!-- Animated SVG Duo Owl Avatar -->
+      <!-- SVG Duo Mascot -->
       <div class="relative w-20 h-20 shrink-0 self-center sm:self-auto">
         <svg id="duoMascot" class="w-full h-full drop-shadow-md transition-transform duration-300 hover:scale-110" viewBox="0 0 100 100">
-          <!-- Body -->
           <ellipse cx="50" cy="55" rx="38" ry="36" fill="#58cc02" />
           <ellipse cx="50" cy="58" rx="28" ry="26" fill="#78c800" />
-          
-          <!-- Feet -->
           <ellipse cx="36" cy="90" rx="10" ry="4" fill="#ff9600" />
           <ellipse cx="64" cy="90" rx="10" ry="4" fill="#ff9600" />
-          
-          <!-- Eyes Outer -->
           <circle cx="36" cy="45" r="16" fill="#ffffff" />
           <circle cx="64" cy="45" r="16" fill="#ffffff" />
-          
-          <!-- Eyes Inner -->
           <circle id="eyeLeft" cx="38" cy="45" r="8" fill="#4b4b4b" />
           <circle id="eyeRight" cx="62" cy="45" r="8" fill="#4b4b4b" />
           <circle cx="40" cy="42" r="3" fill="#ffffff" />
           <circle cx="64" cy="42" r="3" fill="#ffffff" />
-          
-          <!-- Beak -->
           <polygon points="50,48 43,58 57,58" fill="#ff9600" />
-          
-          <!-- Wings -->
           <path d="M 12 50 Q 5 65 20 70 Z" fill="#46a302" />
           <path d="M 88 50 Q 95 65 80 70 Z" fill="#46a302" />
-
-          <!-- Cheeks -->
           <ellipse cx="24" cy="54" rx="5" ry="3" fill="#ff4b4b" opacity="0.4" />
           <ellipse cx="76" cy="54" rx="5" ry="3" fill="#ff4b4b" opacity="0.4" />
         </svg>
@@ -245,7 +223,7 @@
       <!-- Speech Bubble -->
       <div class="relative speech-bubble bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex-1 w-full">
         <div id="mascotMessage" class="text-base font-extrabold text-duo-grayText">
-          Cole a sua requisição <code class="bg-gray-100 text-duo-blue px-2 py-0.5 rounded-md font-mono text-sm">fetch()</code> no campo abaixo e eu transformo em um comando <code class="bg-gray-100 text-duo-green px-2 py-0.5 rounded-md font-mono text-sm">cURL</code> super rápido! 🦉✨
+          Cole a sua requisição <code class="bg-gray-100 text-duo-blue px-2 py-0.5 rounded-md font-mono text-sm">fetch()</code> no campo abaixo e eu transformo em um comando <code class="bg-gray-100 text-duo-green px-2 py-0.5 rounded-md font-mono text-sm">cURL</code> super rápido e sem erros! 🦉✨
         </div>
       </div>
     </div>
@@ -262,10 +240,10 @@
             </span>
             <div class="flex items-center gap-1.5">
               <button onclick="loadSample('json')" class="btn-3d btn-gray text-xs font-extrabold px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-duo-blue hover:text-duo-blueDark">
-                <i class="fa-solid fa-code"></i> JSON
+                <i class="fa-solid fa-code"></i> Exemplo JSON
               </button>
               <button onclick="loadSample('formdata')" class="btn-3d btn-gray text-xs font-extrabold px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-duo-purple hover:text-duo-purpleDark">
-                <i class="fa-solid fa-file-lines"></i> FormData
+                <i class="fa-solid fa-file-lines"></i> Exemplo FormData
               </button>
             </div>
           </div>
@@ -338,7 +316,7 @@
 
         <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-duo-grayBorder hover:bg-gray-100">
           <input type="checkbox" id="optCleanHeaders" onchange="convertFetch()" class="w-4 h-4 accent-duo-green rounded">
-          <span>Omitir Sec-Fetch-* / Priority</span>
+          <span>Omitir Sec-Fetch-* / Priority / User-Agent</span>
         </label>
 
         <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl border border-duo-grayBorder hover:bg-gray-100">
@@ -354,44 +332,11 @@
 
     </div>
 
-    <!-- EXPLANATION / HOW IT WORKS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-2">
-      <div class="bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex items-center gap-3 text-left">
-        <div class="w-12 h-12 bg-green-100 text-duo-green rounded-xl flex items-center justify-center text-xl font-extrabold shrink-0">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <div>
-          <h4 class="font-extrabold text-sm text-duo-grayText">100% Seguro & Local</h4>
-          <p class="text-xs font-bold text-duo-grayMuted">Tudo é processado diretamente no seu navegador. Nenhum dado é enviado para servidores.</p>
-        </div>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex items-center gap-3 text-left">
-        <div class="w-12 h-12 bg-blue-100 text-duo-blue rounded-xl flex items-center justify-center text-xl font-extrabold shrink-0">
-          <i class="fa-solid fa-code-merge"></i>
-        </div>
-        <div>
-          <h4 class="font-extrabold text-sm text-duo-grayText">DevTools Compatible</h4>
-          <p class="text-xs font-bold text-duo-grayMuted">Copie o "Copy as fetch" da aba Network do Firefox ou Chrome e cole diretamente.</p>
-        </div>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl border-2 border-duo-grayBorder flex items-center gap-3 text-left">
-        <div class="w-12 h-12 bg-purple-100 text-duo-purple rounded-xl flex items-center justify-center text-xl font-extrabold shrink-0">
-          <i class="fa-solid fa-brackets-curly"></i>
-        </div>
-        <div>
-          <h4 class="font-extrabold text-sm text-duo-grayText">JSON Auto-Prettify</h4>
-          <p class="text-xs font-bold text-duo-grayMuted">Identifica e formata automaticamente bodies JSON minificados ou escapados.</p>
-        </div>
-      </div>
-    </div>
-
   </main>
 
   <!-- FOOTER -->
   <footer class="max-w-6xl mx-auto px-4 mt-8 text-center text-xs font-bold text-duo-grayMuted">
-    Feito com estilo e energia do <span class="text-duo-green font-extrabold">Duolingo</span> 🦉 • Suporta Fetch API nativa
+    Feito com estilo e energia do <span class="text-duo-green font-extrabold">Duolingo</span> 🦉 • Suporta JSON e Multipart FormData
   </footer>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
@@ -404,44 +349,51 @@
     // --- STATE MANAGEMENT ---
     let soundEnabled = true;
     let userXp = 1250;
-    let userStreak = 14;
 
-    // Helper to detect and parse multipart form-data
+    // --- ROBUST MULTIPART PARSER ---
     function parseMultipartBody(bodyStr, contentTypeHeader) {
       if (!bodyStr || typeof bodyStr !== 'string') return null;
 
-      let boundary = '';
+      // Normalize unescaped \r\n and \n commonly found in pasted JS string literals
+      let normalizedBody = bodyStr;
+      if (normalizedBody.includes('\\r') || normalizedBody.includes('\\n')) {
+        normalizedBody = normalizedBody
+          .replace(/\\r\\n/g, '\r\n')
+          .replace(/\\n/g, '\n')
+          .replace(/\\r/g, '\r');
+      }
+
+      let delimiter = '';
       
-      // Try extracting boundary from Content-Type header
+      // 1. Extract boundary from Content-Type header if available
       if (contentTypeHeader) {
         const boundaryMatch = contentTypeHeader.match(/boundary=([^\s;]+)/i);
         if (boundaryMatch && boundaryMatch[1]) {
-          boundary = boundaryMatch[1].replace(/^["']|["']$/g, '');
+          const b = boundaryMatch[1].replace(/^["']|["']$/g, '');
+          // In HTTP multipart, the boundary delimiter line in body is '--' + boundary parameter
+          delimiter = '--' + b;
         }
       }
       
-      // Fallback: detect boundary from raw body string
-      if (!boundary) {
-        const firstLineMatch = bodyStr.match(/^--([^\r\n]+)/);
+      // 2. Fallback: detect boundary delimiter directly from raw body string
+      if (!delimiter || !normalizedBody.includes(delimiter)) {
+        const firstLineMatch = normalizedBody.match(/^(--[^\r\n]+)/);
         if (firstLineMatch) {
-          boundary = firstLineMatch[1];
+          delimiter = firstLineMatch[1];
+          if (delimiter.endsWith('--') && delimiter.length > 4) {
+            delimiter = delimiter.slice(0, -2);
+          }
         }
       }
 
-      if (!boundary) return null;
+      if (!delimiter || !normalizedBody.includes(delimiter)) return null;
 
-      // Clean boundary prefix
-      if (boundary.startsWith('--')) {
-        boundary = boundary.substring(2);
-      }
-
-      const delimiter = '--' + boundary;
-      const parts = bodyStr.split(delimiter);
+      const parts = normalizedBody.split(delimiter);
       const formFields = [];
 
       for (let part of parts) {
-        part = part.trim();
-        if (!part || part === '--') continue;
+        const trimmedPart = part.trim();
+        if (!trimmedPart || trimmedPart === '--' || trimmedPart === '--\r\n') continue;
 
         let headerEndPos = part.indexOf('\r\n\r\n');
         let headerSepLen = 4;
@@ -455,12 +407,12 @@
         const headersText = part.substring(0, headerEndPos);
         let contentText = part.substring(headerEndPos + headerSepLen);
 
-        // Strip trailing line breaks before next boundary
-        if (contentText.endsWith('\r\n')) {
+        // Strip trailing line breaks and any trailing boundary dashes
+        contentText = contentText.replace(/\r?\n$/, '');
+        if (contentText.endsWith('--')) {
           contentText = contentText.slice(0, -2);
-        } else if (contentText.endsWith('\n')) {
-          contentText = contentText.slice(0, -1);
         }
+        contentText = contentText.replace(/\r?\n$/, '');
 
         // Parse Content-Disposition name and filename
         const cdMatch = headersText.match(/Content-Disposition:\s*form-data;\s*name="([^"]+)"(?:;\s*filename="([^"]+)")?/i);
@@ -469,7 +421,6 @@
         const fieldName = cdMatch[1];
         const fileName = cdMatch[2];
 
-        // Check optional part Content-Type (e.g. image/png)
         const ctMatch = headersText.match(/Content-Type:\s*([^\r\n]+)/i);
         const partContentType = ctMatch ? ctMatch[1].trim() : null;
 
@@ -487,14 +438,48 @@
       return formFields.length > 0 ? formFields : null;
     }
 
-    // --- AUDIO SYNTHESIZER (Web Audio API - No External Files) ---
+    // --- FALLBACK OPTIONS PARSER FOR UNESCAPED JS LITERALS ---
+    function extractOptionsFallback(optionsStr) {
+      const obj = {};
+
+      const methodMatch = optionsStr.match(/"method"\s*:\s*"([^"]+)"/i) || optionsStr.match(/'method'\s*:\s*'([^']+)'/i);
+      if (methodMatch) obj.method = methodMatch[1];
+
+      const refMatch = optionsStr.match(/"referrer"\s*:\s*"([^"]+)"/i) || optionsStr.match(/'referrer'\s*:\s*'([^']+)'/i);
+      if (refMatch) obj.referrer = refMatch[1];
+
+      // Extract body string
+      const bodyMatch = optionsStr.match(/"body"\s*:\s*("(?:[^"\\]|\\.)*"|`[\s\S]*?`)/i) || optionsStr.match(/'body'\s*:\s*('(?:[^'\\]|\\.)*')/i);
+      if (bodyMatch) {
+        try {
+          obj.body = JSON.parse(bodyMatch[1]);
+        } catch (e) {
+          obj.body = bodyMatch[1].slice(1, -1);
+        }
+      }
+
+      // Extract headers object
+      const headersMatch = optionsStr.match(/"headers"\s*:\s*\{([\s\S]*?)\}/i);
+      if (headersMatch) {
+        obj.headers = {};
+        const lines = headersMatch[1].split(/\n|,/);
+        for (const line of lines) {
+          const kv = line.match(/(?:"|')([^"']+)(?:"|')\s*:\s*(?:"|')([^"']+)(?:"|')/);
+          if (kv) {
+            obj.headers[kv[1]] = kv[2];
+          }
+        }
+      }
+
+      return obj;
+    }
+
+    // --- AUDIO SYNTHESIZER ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new AudioContext();
-      }
+      if (!audioCtx) audioCtx = new AudioContext();
     }
 
     function playTone(freq, type, duration, delay = 0) {
@@ -514,12 +499,11 @@
           osc.stop(audioCtx.currentTime + duration);
         }, delay);
       } catch (e) {
-        console.warn("Audio Context error:", e);
+        console.warn("Audio error:", e);
       }
     }
 
     function playChime() {
-      // Duolingo style level up chime (C5, E5, G5, C6)
       playTone(523.25, 'sine', 0.15, 0);   // C5
       playTone(659.25, 'sine', 0.15, 80);  // E5
       playTone(783.99, 'sine', 0.15, 160); // G5
@@ -564,7 +548,7 @@
         eyeR.setAttribute('cy', '42');
         setTimeout(() => mascot.style.transform = 'scale(1) rotate(0deg)', 400);
       } else if (mood === 'error') {
-        mascot.style.transform = 'shake 0.3s';
+        mascot.style.transform = 'scale(0.95)';
         eyeL.setAttribute('cy', '48');
         eyeR.setAttribute('cy', '48');
         setTimeout(() => mascot.style.transform = 'scale(1)', 400);
@@ -607,7 +591,7 @@
       }, 2500);
     }
 
-    // --- PARSER ENGINE: FETCH TO CURL ---
+    // --- MAIN PARSER ENGINE ---
     function parseFetchToCurl(input) {
       if (!input || !input.trim()) {
         return { error: "Cole um código de fetch para converter." };
@@ -632,7 +616,7 @@
         return { error: "Não foi possível encontrar a URL no trecho de fetch fornecido." };
       }
 
-      // Extract Options Object
+      // Extract Options Object safely
       let optionsObj = {};
       const firstCommaPos = cleaned.indexOf(',');
       
@@ -642,39 +626,42 @@
         
         if (openBrace !== -1 && lastCloseBrace > openBrace) {
           const optionsStr = cleaned.slice(openBrace, lastCloseBrace + 1);
+          
           try {
             optionsObj = new Function(`return (${optionsStr});`)();
-          } catch (e) {
-            console.warn("Direct JS evaluation failed. Attempting sanitized parse.", e);
+          } catch (e1) {
             try {
-              optionsObj = eval(`(${optionsStr})`);
-            } catch (err) {
-              return { error: "Erro ao interpretar o objeto de opções (headers/body) do fetch." };
+              // Sanitize unescaped newlines inside JS strings
+              const sanitizedStr = optionsStr.replace(/(["'])([\s\S]*?)\1/g, (m, q, c) => {
+                return q + c.replace(/\r?\n/g, '\\n') + q;
+              });
+              optionsObj = new Function(`return (${sanitizedStr});`)();
+            } catch (e2) {
+              console.warn("Direct JS evaluation failed. Using fallback extraction.", e2);
+              optionsObj = extractOptionsFallback(optionsStr);
             }
           }
         }
       }
 
-      // Extraction of Properties
       const method = (optionsObj.method || 'GET').toUpperCase();
       const headers = optionsObj.headers || {};
       const referrer = optionsObj.referrer || optionsObj.referer;
       const body = optionsObj.body;
 
-      // Find Content-Type header key if present
+      // Check Content-Type header
       const ctKey = Object.keys(headers).find(k => k.toLowerCase() === 'content-type');
       const ctValue = ctKey ? headers[ctKey] : '';
 
       // Check for multipart/form-data
       const multipartFields = parseMultipartBody(body, ctValue);
 
-      // Config Options
       const prettify = document.getElementById('optPrettify').checked;
       const cleanHeaders = document.getElementById('optCleanHeaders').checked;
       const multiline = document.getElementById('optMultiline').checked;
 
       const curlParts = [];
-      const q = "'"; // quote type
+      const q = "'";
 
       // Command Base
       curlParts.push(`curl ${q}${url}${q}`);
@@ -686,16 +673,20 @@
 
       // Headers processing
       for (const [key, val] of Object.entries(headers)) {
+        const lowerKey = key.toLowerCase();
+
         if (cleanHeaders) {
-          const lowerKey = key.toLowerCase();
-          if (lowerKey.startsWith('sec-fetch-') || lowerKey === 'priority') {
+          if (lowerKey.startsWith('sec-fetch-') || lowerKey === 'priority' || lowerKey === 'user-agent') {
             continue; // Skip noise headers if clean option enabled
           }
         }
-        // When converting multipart to -F, cURL auto-generates Content-Type with boundary
-        if (multipartFields && key.toLowerCase() === 'content-type') {
+
+        // CRITICAL FIX: When converting multipart to -F flags, cURL automatically creates its own Content-Type with dynamic boundary.
+        // Stripping the manual Content-Type prevents boundary mismatches on backend servers (ASP.NET, Spring, Node).
+        if (multipartFields && lowerKey === 'content-type') {
           continue;
         }
+
         curlParts.push(`-H ${q}${key}: ${val}${q}`);
       }
 
@@ -706,7 +697,7 @@
 
       // Body processing
       if (multipartFields) {
-        // Output as cURL -F flags
+        // Output clean -F flags
         for (const field of multipartFields) {
           curlParts.push(`-F ${q}${field.name}=${field.value}${q}`);
         }
@@ -727,7 +718,6 @@
         curlParts.push(`--data-raw ${q}${formattedBody}${q}`);
       }
 
-      // Join multi-line vs single line
       if (multiline) {
         return { result: curlParts.join(' \\\n  ') };
       } else {
@@ -774,7 +764,7 @@
         if (isManualClick) {
           playChime();
           triggerXpGain(10);
-          setMascotMood('happy', 'Incrível! Requisição convertida com sucesso para cURL! **+10 XP** 🎉');
+          setMascotMood('happy', 'Perfeito! O cURL foi gerado com as flags `-F` corretas para FormData! **+10 XP** 🎉');
           showToast('Convertido para cURL com sucesso!', 'fa-bolt');
         }
       }
@@ -832,7 +822,7 @@
       convertFetch(true);
 
       if (sampleType === 'formdata') {
-        setMascotMood('happy', 'Exemplo de **FormData** carregado! Os campos e arquivos foram convertidos para `-F`! 📦✨');
+        setMascotMood('happy', 'Exemplo de **FormData** carregado! Os campos e arquivos foram convertidos para `-F` sem conflito de cabeçalhos! 📦✨');
       } else {
         setMascotMood('happy', 'Exemplo de **JSON** carregado! Veja o cURL gerado ao lado. 🚀');
       }
@@ -856,7 +846,6 @@
         return;
       }
 
-      // Safe Clipboard Copying
       const textarea = document.createElement('textarea');
       textarea.value = curlText;
       document.body.appendChild(textarea);
@@ -867,7 +856,7 @@
         playPop();
         triggerXpGain(5);
         showToast('cURL copiado para a área de transferência! 📋', 'fa-circle-check');
-        setMascotMood('happy', 'Comando cURL copiado! Prontinho para colar no seu Terminal ou Postman. 📋✨');
+        setMascotMood('happy', 'Comando cURL copiado! Prontinho para colar no Terminal, Postman ou Insomnia! 📋✨');
       } catch (err) {
         showToast('Erro ao copiar', 'fa-triangle-exclamation');
       } finally {
@@ -904,7 +893,7 @@
 
     // Auto-load sample on startup
     window.onload = () => {
-      loadSample();
+      loadSample('formdata');
     };
   </script>
 </body>
