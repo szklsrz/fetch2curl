@@ -260,9 +260,14 @@
             <span class="bg-blue-100 text-duo-blue px-3 py-1 rounded-xl font-black text-xs tracking-wider uppercase flex items-center gap-2">
               <i class="fa-brands fa-js"></i> JS Fetch Input
             </span>
-            <button onclick="loadSample()" class="btn-3d btn-gray text-xs font-extrabold px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-duo-blue hover:text-duo-blueDark">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Carregar Exemplo
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="loadSample('json')" class="btn-3d btn-gray text-xs font-extrabold px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-duo-blue hover:text-duo-blueDark">
+                <i class="fa-solid fa-code"></i> JSON
+              </button>
+              <button onclick="loadSample('formdata')" class="btn-3d btn-gray text-xs font-extrabold px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-duo-purple hover:text-duo-purpleDark">
+                <i class="fa-solid fa-file-lines"></i> FormData
+              </button>
+            </div>
           </div>
 
           <!-- Textarea Input -->
@@ -401,6 +406,87 @@
     let userXp = 1250;
     let userStreak = 14;
 
+    // Helper to detect and parse multipart form-data
+    function parseMultipartBody(bodyStr, contentTypeHeader) {
+      if (!bodyStr || typeof bodyStr !== 'string') return null;
+
+      let boundary = '';
+      
+      // Try extracting boundary from Content-Type header
+      if (contentTypeHeader) {
+        const boundaryMatch = contentTypeHeader.match(/boundary=([^\s;]+)/i);
+        if (boundaryMatch && boundaryMatch[1]) {
+          boundary = boundaryMatch[1].replace(/^["']|["']$/g, '');
+        }
+      }
+      
+      // Fallback: detect boundary from raw body string
+      if (!boundary) {
+        const firstLineMatch = bodyStr.match(/^--([^\r\n]+)/);
+        if (firstLineMatch) {
+          boundary = firstLineMatch[1];
+        }
+      }
+
+      if (!boundary) return null;
+
+      // Clean boundary prefix
+      if (boundary.startsWith('--')) {
+        boundary = boundary.substring(2);
+      }
+
+      const delimiter = '--' + boundary;
+      const parts = bodyStr.split(delimiter);
+      const formFields = [];
+
+      for (let part of parts) {
+        part = part.trim();
+        if (!part || part === '--') continue;
+
+        let headerEndPos = part.indexOf('\r\n\r\n');
+        let headerSepLen = 4;
+        if (headerEndPos === -1) {
+          headerEndPos = part.indexOf('\n\n');
+          headerSepLen = 2;
+        }
+
+        if (headerEndPos === -1) continue;
+
+        const headersText = part.substring(0, headerEndPos);
+        let contentText = part.substring(headerEndPos + headerSepLen);
+
+        // Strip trailing line breaks before next boundary
+        if (contentText.endsWith('\r\n')) {
+          contentText = contentText.slice(0, -2);
+        } else if (contentText.endsWith('\n')) {
+          contentText = contentText.slice(0, -1);
+        }
+
+        // Parse Content-Disposition name and filename
+        const cdMatch = headersText.match(/Content-Disposition:\s*form-data;\s*name="([^"]+)"(?:;\s*filename="([^"]+)")?/i);
+        if (!cdMatch) continue;
+
+        const fieldName = cdMatch[1];
+        const fileName = cdMatch[2];
+
+        // Check optional part Content-Type (e.g. image/png)
+        const ctMatch = headersText.match(/Content-Type:\s*([^\r\n]+)/i);
+        const partContentType = ctMatch ? ctMatch[1].trim() : null;
+
+        if (fileName) {
+          let fileSpec = `@${fileName}`;
+          if (partContentType) {
+            fileSpec += `;type=${partContentType}`;
+          }
+          formFields.push({ name: fieldName, value: fileSpec, isFile: true });
+        } else {
+          formFields.push({ name: fieldName, value: contentText, isFile: false });
+        }
+      }
+
+      return formFields.length > 0 ? formFields : null;
+    }
+
     // --- AUDIO SYNTHESIZER (Web Audio API - No External Files) ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
@@ -530,14 +616,12 @@
       const cleaned = input.trim();
 
       // Extract URL using Regex
-      // Matches fetch("URL", ...) or fetch('URL', ...) or fetch(`URL`, ...)
       let url = "";
       const urlMatch = cleaned.match(/fetch\s*\(\s*(["'`])((?:\\\1|(?!\1).)*)\1/);
       
       if (urlMatch && urlMatch[2]) {
         url = urlMatch[2];
       } else {
-        // Fallback: look for http:// or https:// inside quotes
         const fallbackMatch = cleaned.match(/(["'`])(https?:\/\/[^"'`]+)\1/);
         if (fallbackMatch && fallbackMatch[2]) {
           url = fallbackMatch[2];
@@ -559,12 +643,10 @@
         if (openBrace !== -1 && lastCloseBrace > openBrace) {
           const optionsStr = cleaned.slice(openBrace, lastCloseBrace + 1);
           try {
-            // Evaluates JS Object safely in local context
             optionsObj = new Function(`return (${optionsStr});`)();
           } catch (e) {
             console.warn("Direct JS evaluation failed. Attempting sanitized parse.", e);
             try {
-              // Alternative backup extraction
               optionsObj = eval(`(${optionsStr})`);
             } catch (err) {
               return { error: "Erro ao interpretar o objeto de opções (headers/body) do fetch." };
@@ -578,6 +660,13 @@
       const headers = optionsObj.headers || {};
       const referrer = optionsObj.referrer || optionsObj.referer;
       const body = optionsObj.body;
+
+      // Find Content-Type header key if present
+      const ctKey = Object.keys(headers).find(k => k.toLowerCase() === 'content-type');
+      const ctValue = ctKey ? headers[ctKey] : '';
+
+      // Check for multipart/form-data
+      const multipartFields = parseMultipartBody(body, ctValue);
 
       // Config Options
       const prettify = document.getElementById('optPrettify').checked;
@@ -603,6 +692,10 @@
             continue; // Skip noise headers if clean option enabled
           }
         }
+        // When converting multipart to -F, cURL auto-generates Content-Type with boundary
+        if (multipartFields && key.toLowerCase() === 'content-type') {
+          continue;
+        }
         curlParts.push(`-H ${q}${key}: ${val}${q}`);
       }
 
@@ -612,7 +705,12 @@
       }
 
       // Body processing
-      if (body !== undefined && body !== null) {
+      if (multipartFields) {
+        // Output as cURL -F flags
+        for (const field of multipartFields) {
+          curlParts.push(`-F ${q}${field.name}=${field.value}${q}`);
+        }
+      } else if (body !== undefined && body !== null) {
         let formattedBody = body;
 
         if (typeof body === 'string') {
@@ -620,13 +718,12 @@
             const parsed = JSON.parse(body);
             formattedBody = prettify ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed);
           } catch (e) {
-            // Not JSON string, keep raw string
+            // Raw string
           }
         } else if (typeof body === 'object') {
           formattedBody = prettify ? JSON.stringify(body, null, 2) : JSON.stringify(body);
         }
 
-        // Format raw data parameter
         curlParts.push(`--data-raw ${q}${formattedBody}${q}`);
       }
 
@@ -683,9 +780,8 @@
       }
     }
 
-    function loadSample() {
-      // User provided sample preloaded
-      const sample = `await fetch("http://localhost:4200/corporate/gateway/arms-corporate-api/people?sessionEntityId=89&cultureCode=pt-BR", {
+    function loadSample(sampleType = 'json') {
+      const sampleJson = `await fetch("http://localhost:4200/corporate/gateway/arms-corporate-api/people?sessionEntityId=89&cultureCode=pt-BR", {
     "credentials": "include",
     "headers": {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0",
@@ -708,10 +804,38 @@
     "mode": "cors"
 });`;
 
-      document.getElementById('fetchInput').value = sample;
+      const sampleFormData = `await fetch("http://localhost:4200/corporate/gateway/arms-corporate-api/occurrence-third-party-insurer/add-compensation?sessionEntityId=82&cultureCode=pt-BR", {
+    "credentials": "include",
+    "headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6...",
+        "Culture": "pt-BR",
+        "X-KL-kes-Ajax-Request": "Ajax_Request",
+        "Content-Type": "multipart/form-data; boundary=----geckoformboundary12404482a0df4a035d4c1599d5580687",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "Priority": "u=0",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache"
+    },
+    "referrer": "http://localhost:4200/corporate/occurrence/107872/edit/external-insurer",
+    "body": "------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"processId\\"\\r\\n\\r\\n614\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"date\\"\\r\\n\\r\\n2026-10-05T03:00:00.000Z\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"requestedValue\\"\\r\\n\\r\\n100\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"amountRecognized\\"\\r\\n\\r\\n100\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"compensatedAmount\\"\\r\\n\\r\\n100\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"comments\\"\\r\\n\\r\\n\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"assetsList\\"\\r\\n\\r\\n[{\\"assetId\\":32350,\\"description\\":\\"TV\\",\\"assetType\\":\\"Eletrônicos\\",\\"quantity\\":1,\\"authorizedValue\\":6,\\"compensatedAmount\\":100}]\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687\\r\\nContent-Disposition: form-data; name=\\"files\\"; filename=\\"download.png\\"\\r\\nContent-Type: image/png\\r\\n\\r\\n\\u0089PNG\\r\\n\\u001a\\n\\u0000\\u0000\\u0000\\rIHDR\\u0000\\u0000\\u0000\\u0001\\u0000\\u0000\\u0000\\u0001\\u0001\\u0000\\u0000\\u0000\\u00007nù$\\u0000\\u0000\\u0000\\nIDATx\\u0001c\`\\u0000\\u0000\\u0000\\u0002\\u0000\\u0001su\\u0001\\u0018\\u0000\\u0000\\u0000\\u0000IEND®B\`\\u0082\\r\\n------geckoformboundary12404482a0df4a035d4c1599d5580687--\\r\\n",
+    "method": "POST",
+    "mode": "cors"
+});`;
+
+      document.getElementById('fetchInput').value = sampleType === 'formdata' ? sampleFormData : sampleJson;
       playPop();
       convertFetch(true);
-      setMascotMood('happy', 'Exemplo de requisição carregado! Veja o cURL gerado ao lado. 🚀');
+
+      if (sampleType === 'formdata') {
+        setMascotMood('happy', 'Exemplo de **FormData** carregado! Os campos e arquivos foram convertidos para `-F`! 📦✨');
+      } else {
+        setMascotMood('happy', 'Exemplo de **JSON** carregado! Veja o cURL gerado ao lado. 🚀');
+      }
     }
 
     function clearInput() {
